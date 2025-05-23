@@ -1,4 +1,3 @@
-#%%
 from hedypet.utils import load_splits
 from tqdm import tqdm
 from bids import resample_and_save_bids
@@ -34,7 +33,7 @@ def main(subs,raw_root,derivatives_root,pipeline_name,derivatives_entities):
         
         for seg in derivatives_root.glob(f"synthseg/{sub}/**/*.nii.gz"):
             resample_and_save_bids(seg,target,target,cval=0,order=0,rigid_registration=registration_matrix_head,**default_args)  
-
+        
 if __name__ == "__main__":
     from hedypet.utils import RAW_ROOT, DERIVATIVES_ROOT
 
@@ -44,6 +43,3 @@ if __name__ == "__main__":
     subs = load_splits()["all"]
     main(subs,RAW_ROOT,DERIVATIVES_ROOT,PIPELINE_NAME,DERIVATIVE_ENTITIES)
 
-
-    
-# %%

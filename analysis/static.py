@@ -12,34 +12,21 @@ from matplotlib import pyplot as plt
 import os 
 import json
 from utils import TS_CLASS_TO_LABEL, plot_patplak
-from collections import defaultdict
 
 WORKING_DIR = Path("/depict/users/hinge/private/hedypet/dynamic")
 CYLINDER_VOLUME_ML = 1
 CYLINDER_WIDTH_PX = 3
 
-def binary_erode(arr,n):
-    if n==0:
-        return arr
-    new_mask = np.zeros_like(arr)
-    un = list(np.unique(arr))
-    un.remove(0)
-    for k in un:
-        m = arr==k
-        m = binary_erosion(m,iterations=n)
-        new_mask[m] = k
-    return new_mask
-
 def run_save_patlak(tac,if_tac,frame_time_middle, out_dir, region_name, n_frames_regression=4,save_img=False):
     slope, intercept, X, Y = roi_patlak(tac,if_tac,frame_time_middle,n_frames_regression)
     ki_path = os.path.join(out_dir,f"{region_name}_Ki.txt")
     os.makedirs(out_dir,exist_ok=True)
+    np.savetxt(ki_path,np.array([slope]))
 
     if save_img:
         plt.figure(figsize=(4,3))
         plot_patplak(X,Y,slope,intercept,n_frames_regression)
         plt.title(region_name)
-        plt.ylim(np.nanmin(Y),np.nanmax(Y[-n_frames_regression:])*1.1)
         plt.legend()
         plt.savefig(ki_path.replace(".txt",".jpg"))
 
@@ -81,17 +68,15 @@ def main(sub):
     if_tac_path = (WORKING_DIR / sub) / "if_tac.txt"
     t_path = (WORKING_DIR / sub) / "t_tac.txt"
     patlak_f10_path = (WORKING_DIR / sub) / "patlak_f10.nii.gz"
-    
+    organs_tacs_path = (WORKING_DIR / sub) / "tacs_no_erosion.json"
     
     # Extract and save aorta_desc tac, vois, and frametimes
     if not if_tac_path.exists():
         print("Extracting aorta tacs")
+        dpet = nib.load(dpet_path)
         totalseg = nib.load(totalseg_path)
 
-        try:
-            aorta_vois, aorta_segments, if_tac, frame_time_middle = extract_vois_and_if(dpet_path,totalseg_path)
-        except:
-            return
+        aorta_vois, aorta_segments, if_tac, frame_time_middle = extract_vois_and_if(dpet_path,totalseg_path)
         os.makedirs((WORKING_DIR / sub),exist_ok=True)
         np.savetxt(if_tac_path, if_tac)
         np.savetxt(t_path,frame_time_middle)
@@ -103,59 +88,43 @@ def main(sub):
         out, _ = voxel_patlak(dpet_path,if_tac,frame_time_middle,n_frames_linear_regression=10,axial_chunk_size=32)
         nib.save(nib.Nifti1Image(out, totalseg.affine),patlak_f10_path)
     
-    regions = [90,1,2,3,4,5,6,7,15,16,20,22,52]
+    return
+    #regions = [90,1,2,3,4,5,6,7,15,16,20,22,52]
+    regions = [90]
+    
+    # Extract organ vois
+    if not organs_tacs_path.exists():
+        seg = nib.load(totalseg_path).get_fdata()
+        
+        seg[~np.isin(seg,regions)] = 0
+        tacs = extract_multiple_tacs(dpet, seg)
 
-    frame_time_middle = np.loadtxt(t_path)
+        with open(organs_tacs_path,"w") as handle:
+            json.dump(tacs,handle,indent=4,sort_keys=True)
+
     if_tac = np.loadtxt(if_tac_path)
-    for erosion in [0,1,2,3]:
+    frame_time_middle = np.loadtxt(t_path)
 
-        organs_tacs_path = (WORKING_DIR / sub) / f"tacs_erosion_{erosion}.json"
-        # Extract organ vois
-        if not organs_tacs_path.exists():
-            seg = nib.load(totalseg_path).get_fdata()
-            seg[~np.isin(seg,regions)] = 0
-            seg = binary_erode(seg,erosion)
-            tacs = extract_multiple_tacs(dpet_path, seg)
+    # Run patlak for each organ
+    with open(organs_tacs_path,"r") as handle:
+        tacs = json.load(handle)
 
-            with open(organs_tacs_path,"w") as handle:
-                json.dump(tacs,handle,indent=4,sort_keys=True)
-
-        # Run patlak for each organ
-        with open(organs_tacs_path,"r") as handle:
-            tacs = json.load(handle)
-
-
-        frames = [2,3,4,5,6,7,8,9,10,11,12]
-        kis = {
-            "frames": frames,
-            "organ_ki": defaultdict(list) 
-        }
+    for reg in regions:
+        tac = np.array(tacs[str(reg)])
         out_dir = (WORKING_DIR / sub) / "organs"
-        for reg in tacs:
-            for n_frames in frames:
-                tac = np.array(tacs[reg])
-                
-                slope, intercept, X, Y = roi_patlak(tac,if_tac,frame_time_middle,n_frames)
-                kis["organ_ki"][TS_CLASS_TO_LABEL[str(reg)]].append(float(slope))
-
-                if n_frames == 6 and erosion == 0:
-                    run_save_patlak(
-                        tac,
-                        if_tac = if_tac,
-                        frame_time_middle=frame_time_middle,
-                        out_dir = out_dir,
-                        region_name = TS_CLASS_TO_LABEL[str(reg)]+f"_erosion_{erosion}_nframes_{n_frames}",
-                        n_frames_regression=n_frames,
-                        save_img= True,
-                    )
-
-        with open(out_dir/f"Ki_erosion{erosion}.json","w") as handle:
-            json.dump(kis,handle,indent=4,sort_keys=True)
+        run_save_patlak(
+            tac,
+            if_tac = if_tac,
+            frame_time_middle=frame_time_middle,
+            out_dir = out_dir,
+            region_name = TS_CLASS_TO_LABEL[str(reg)],
+            n_frames_regression=6,
+            save_img=True
+        )
 
 subs = load_splits()["all"]
-for sub in subs[3::2]:
+for sub in subs:
     try:
         main(sub=sub)
     except:
         continue
-
