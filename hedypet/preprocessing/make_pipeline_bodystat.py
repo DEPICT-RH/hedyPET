@@ -11,7 +11,7 @@ def main(subs,raw_root,derivatives_root,pipeline_name,derivatives_entities):
         "derivative_entities":derivatives_entities,
         "Space": "Static PET space"
     }
-
+    
     for sub in tqdm(subs):
         
         sub_root = raw_root / sub

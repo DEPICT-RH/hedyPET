@@ -1,5 +1,5 @@
 #%%
-from preprocessing.registration import register_rigid_ants
+from hedypet.preprocessing.registration import register_rigid_ants
 from hedypet.utils import load_splits, save_numpy_array
 from hedypet.utils import get_head_center, get_voxmap_around_centerpoint
 from tqdm import tqdm
@@ -48,9 +48,12 @@ def main(subs,raw_root,derivatives_root,pipeline_name,derivatives_entities,size_
         resample_and_save_bids(ct,target,ct,cval=-1024,order=3,**default_args)
         
         #Resample Topogram
-        xray = next(sub_root.glob("anat/*Xray.nii.gz"))
-        resample_and_save_bids(xray,target,ct,cval=-1024,order=3,is_2d_acquisition=True,**default_args)
-
+        try:
+            xray = next(sub_root.glob("anat/*Xray.nii.gz"))
+            resample_and_save_bids(xray,target,ct,cval=-1024,order=3,is_2d_acquisition=True,**default_args)
+        except StopIteration:
+            pass
+        
         #Resample PET
         for pet in sub_root.glob("pet/*stat*_pet.nii.gz"):
             resample_and_save_bids(pet,target,ct,cval=0,order=3,**default_args)

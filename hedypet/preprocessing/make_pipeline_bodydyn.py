@@ -10,7 +10,7 @@ def main(subs,raw_root,derivatives_root,pipeline_name,derivatives_entities):
         "derivative_entities":derivatives_entities,
         "Space": "Dynamic PET space"
     }
-
+    
     for sub in tqdm(subs):
         
         sub_root = raw_root / sub
@@ -18,8 +18,11 @@ def main(subs,raw_root,derivatives_root,pipeline_name,derivatives_entities):
 
         # run make_pipeline_head to create registration_matrices
         assert registration_matrix_head.exists()
-        
-        target = next(sub_root.glob("pet/*acdyn*_pet.nii.gz"))
+
+        try:
+            target = next(sub_root.glob("pet/*acdyn*_pet.nii.gz"))
+        except:
+            continue
         
         #Resample CT
         ct = next(sub_root.glob("anat/*_ct.nii.gz"))
