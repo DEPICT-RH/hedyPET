@@ -1,0 +1,12 @@
+[project]
+name = "hedyPET"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "antspyx>=0.5.4",
+    "nibabel>=5.3.2",
+    "python-dotenv>=1.1.0",
+    "tqdm>=4.67.1",
+]
