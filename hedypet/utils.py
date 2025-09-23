@@ -5,6 +5,8 @@ import json
 import re 
 import nibabel as nib
 import numpy as np
+import pandas as pd
+from scipy.ndimage import binary_erosion
 
 load_dotenv()
 
@@ -45,3 +47,52 @@ def get_voxmap_around_centerpoint(center_point,isotropic_mm,size_mm):
     offset[0] = -offset[0]
     affine[:3,-1] = center_point-offset
     return shape, affine
+
+
+def get_patient_metadata(sub):
+    df = pd.read_csv(RAW_ROOT / "participants.tsv",sep="\t")
+    row = df[df.participant_id == sub].iloc[0].to_dict()
+    row["InjectedRadioactivity"] = load_sidecar(next((RAW_ROOT / sub).glob("pet/*acstat*_pet.nii.gz")))["InjectedRadioactivity"]
+    return row
+
+def get_norm_consts(sub):
+    norm_consts = {}
+    for p in (DERIVATIVES_ROOT / "pet_norm_consts").glob(f"{sub}/*.txt"):
+        with open(p,"r") as handle:
+            norm_consts[p.stem] = float(handle.read())
+
+
+def binary_erode(arr,n):
+    if n==0:
+        return arr
+    new_mask = np.zeros_like(arr)
+    un = list(np.unique(arr))
+    un.remove(0)
+    for k in un:
+        m = arr==k
+        m = binary_erosion(m,iterations=n)
+        new_mask[m] = k
+    return new_mask
+
+
+
+def draw_cylinder(p1, p2, r, shape):
+    p1, p2 = np.asarray(p1, dtype=float), np.asarray(p2, dtype=float)
+    coords = np.moveaxis(np.indices(shape, dtype=float), 0, -1)
+    
+    seg_vec = p2 - p1
+    seg_len_sq = np.sum(seg_vec**2)
+    
+    if np.isclose(seg_len_sq, 0): # Case: p1 and p2 are the same (sphere)
+        return np.sum((coords - p1)**2, axis=-1) <= r**2
+        
+    p1_to_coords = coords - p1
+    # Projection: t = dot(p1_to_coords, seg_vec) / seg_len_sq
+    t = np.dot(p1_to_coords, seg_vec) / seg_len_sq
+    
+    # Perpendicular distance squared to infinite line:
+    # dist_sq = ||p1_to_coords X seg_vec||^2 / seg_len_sq
+    dist_sq = np.sum(np.cross(p1_to_coords, seg_vec)**2, axis=-1) / seg_len_sq
+    
+    # Check if on segment and within radius
+    return (t >= 0) & (t <= 1) & (dist_sq <= r**2)

@@ -1,7 +1,7 @@
 
 import json
 import os
-from resample import resample_series
+from hedypet.preprocessing.resample import resample_series
 import re
 
 def path_to_bids_uri(image_path):
@@ -15,8 +15,11 @@ def make_pipeline_derivative_name(img_path,pipeline_root,derivative_entities):
     out_path = (pipeline_root / sub) / (source + derivative_entities +suffix)
     return out_path
 
-def create_derivatives_sidecar(image_path,reference, sources,**kwargs):
-    outjson = str(image_path).replace(".nii.gz",".json")
+def create_derivatives_sidecar(image_path,reference, sources=[],**kwargs):
+    if str(image_path).endswith(".nii.gz"):
+        outjson = str(image_path).replace(".nii.gz",".json")
+    else:
+        outjson = str(image_path.parent / (image_path.stem +".json"))
     sources = [path_to_bids_uri(source) for source in sources]
     try:
         ref_uri = path_to_bids_uri(reference)
@@ -27,7 +30,7 @@ def create_derivatives_sidecar(image_path,reference, sources,**kwargs):
             "Sources":sources,
         }
     sidecar.update(**kwargs)
-
+    os.makedirs(os.path.dirname(outjson),exist_ok=True)
     with open(outjson,"w") as handle:
         json.dump(sidecar,handle,sort_keys=True,indent=4)
 

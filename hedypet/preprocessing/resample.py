@@ -42,8 +42,10 @@ def resample_series(
     
     if pre_affine is not None:
         pre_aff = np.loadtxt(pre_affine)
-        img = nib.Nifti1Image(img.get_fdata(), pre_aff @ img.affine, img.header)
+        #np.asanyarray(img.dataobj) preserves datatype as opposed to .get_fdat()
+        img = nib.Nifti1Image(np.asanyarray(img.dataobj), pre_aff @ img.affine, img.header)
     
+    #img.set_data_dtype("smallest")
     # Option to change voxelsize while keeping the same world-space FOV 
     if isotropic_mm is not None:
         scaling = isotropic_mm / np.abs(np.diag(target_affine)[:3])
@@ -55,7 +57,7 @@ def resample_series(
         (target_shape, target_affine),
         order=order,
         mode=mode,
-        cval=cval
+        cval=cval,
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     nib.save(resampled, str(output_path))
