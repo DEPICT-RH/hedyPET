@@ -17,7 +17,7 @@ def fix_aorta_sub_77(aorta):
     return aorta | cyl
 
 
-def make_aorta_masks(sub, ml,px,derivative_root,raw_root):
+def main(sub, ml,px,derivative_root,raw_root):
     dyn_derivatives = derivative_root / f"pipeline-bodydyn/{sub}"
     seg_derivatives = derivative_root / f"aorta/{sub}"
     dpet_path = next((raw_root / sub).glob("pet/*acdyn*_pet.nii.gz"))
@@ -91,6 +91,6 @@ if __name__ == "__main__":
     for param in param_sets:
         for sub in tqdm(subs):
             print(DERIVATIVES_ROOT,RAW_ROOT)
-            make_aorta_masks(sub,**param,derivative_root=DERIVATIVES_ROOT, raw_root=RAW_ROOT)
+            main(sub,**param,derivative_root=DERIVATIVES_ROOT, raw_root=RAW_ROOT)
 
 # %%

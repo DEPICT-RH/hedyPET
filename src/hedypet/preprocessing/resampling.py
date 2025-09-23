@@ -4,7 +4,8 @@ import numpy as np
 from pathlib import Path
 from typing import Optional
 from nibabel.processing import resample_from_to
-from hedypet.utils import *
+from hedypet.preprocessing.utils import *
+from hedypet.preprocessing.bids import *
 
 def resample_series(
     input_path: Path,
@@ -62,3 +63,31 @@ def resample_series(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     nib.save(resampled, str(output_path))
 
+
+def resample_and_save_bids(img_path,target,spatial_reference,pipeline_root, derivative_entities,cval,order,rigid_registration=None, overwrite=False, is_2d_acquisition=False,**sidecar_entries):
+    out_path = make_pipeline_derivative_name(img_path,pipeline_root,derivative_entities)
+    
+    if not out_path.exists() or overwrite:
+        resample_series(
+            img_path,
+            target,
+            out_path,
+            pre_affine=rigid_registration,
+            cval=cval,
+            order=order,
+            mode = "nearest" if is_2d_acquisition else "constant",
+            is_2d_acquisition=is_2d_acquisition
+        )
+        sources = [img_path]
+
+        if rigid_registration is not None:
+            sources.append(rigid_registration)
+
+        create_derivatives_sidecar(
+            out_path, 
+            reference=spatial_reference,
+            sources=sources,
+            **sidecar_entries
+        )
+
+    return out_path

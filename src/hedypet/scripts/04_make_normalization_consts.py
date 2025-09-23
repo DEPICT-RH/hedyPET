@@ -1,16 +1,10 @@
 import nibabel as nib
 from hedypet.utils import load_splits, DERIVATIVES_ROOT
 from tqdm import tqdm
-from normalization import *
+from hedypet.preprocessing.normalization import *
 from hedypet.utils import *
-from bids import *
-
-def save_constant_bids(constant, save_path,description,sources):
-    os.makedirs(save_path.parent,exist_ok=True)
-    with open(save_path,"w") as handle:
-        handle.write(str(constant))
-
-    create_derivatives_sidecar(save_path, None ,sources,Description=description)
+from hedypet.preprocessing.utils import *
+from hedypet.preprocessing.bids import *
 
 def main(sub,raw_root,derivatives_root):
     

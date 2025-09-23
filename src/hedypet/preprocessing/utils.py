@@ -8,19 +8,6 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import binary_erosion
 
-load_dotenv()
-
-RAW_ROOT = Path(os.environ["RAW_ROOT"])
-DERIVATIVES_ROOT = Path(os.environ["DERIVATIVES_ROOT"])
-
-def load_splits():
-    with open(RAW_ROOT / "code/data_splits.json","r") as handle:
-        return json.load(handle)
-    
-def load_sidecar(image_path):
-    with open(str(image_path).replace(".nii.gz",".json"),"r") as handle:
-        return json.load(handle)
-    
 def save_numpy_array(
     array: np.ndarray,
     output_path: Path,
@@ -47,19 +34,6 @@ def get_voxmap_around_centerpoint(center_point,isotropic_mm,size_mm):
     offset[0] = -offset[0]
     affine[:3,-1] = center_point-offset
     return shape, affine
-
-
-def get_patient_metadata(sub):
-    df = pd.read_csv(RAW_ROOT / "participants.tsv",sep="\t")
-    row = df[df.participant_id == sub].iloc[0].to_dict()
-    row["InjectedRadioactivity"] = load_sidecar(next((RAW_ROOT / sub).glob("pet/*acstat*_pet.nii.gz")))["InjectedRadioactivity"]
-    return row
-
-def get_norm_consts(sub):
-    norm_consts = {}
-    for p in (DERIVATIVES_ROOT / "pet_norm_consts").glob(f"{sub}/*.txt"):
-        with open(p,"r") as handle:
-            norm_consts[p.stem] = float(handle.read())
 
 
 def binary_erode(arr,n):

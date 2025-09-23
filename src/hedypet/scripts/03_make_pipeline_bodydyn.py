@@ -1,6 +1,6 @@
 from hedypet.utils import load_splits
 from tqdm import tqdm
-from bids import resample_and_save_bids
+from hedypet.preprocessing.resample import resample_and_save_bids
 
 def main(sub,raw_root,derivatives_root):
 

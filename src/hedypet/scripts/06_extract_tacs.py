@@ -1,35 +1,11 @@
 
-from nifti_dynamic.utils import extract_multiple_tacs, save_tac
 import nibabel as nib
 import numpy as np
 from hedypet.utils import load_splits, RAW_ROOT, DERIVATIVES_ROOT
-from multiprocessing import Pool
-from functools import partial
-from hedypet.preprocessing.bids import create_derivatives_sidecar
-from hedypet.utils import binary_erode
+from hedypet.preprocessing.tacs import extract_and_save_tac
 from parse import parse
 
-def extract_and_save_tac(dpet_path,seg_path,tac_save_folder,erosion):
-    if isinstance(seg_path, np.ndarray):
-        seg = seg_path
-        sources = [dpet_path]
-    else:
-        seg = nib.load(seg_path).get_fdata()
-        seg = binary_erode(seg,erosion)
-        sources = [dpet_path,seg_path]
-
-    create_derivatives_sidecar(tac_save_folder.parent,reference=None,sources=sources)
-    tacs_mean, tacs_std, tacs_n = extract_multiple_tacs(dpet_path, seg,return_std_n=True)
-    for k in tacs_mean:
-        save_tac(
-            tac_save_folder/f"tac_{k}",
-                tacs_mean[k],
-                tacs_std[k],
-                tacs_n[k],
-            )
-
-
-def extract_all_organ_tacs(sub, raw_root, derivatives_root, rec="acstatPSF", erosions=[0,1]):
+def main(sub, raw_root, derivatives_root, rec="acstatPSF", erosions=[0,1]):
     """Organ mean extraction for static PET reconstructions (pipelinye-bodystat)"""
 
     assert rec in  ["acstatPSF","acdynPSF"]
@@ -103,5 +79,5 @@ if __name__ == "__main__":
     subs.remove("sub-017")
     for rec in ["acdynPSF","acstatPSF"]:
         for sub in subs:
-            extract_all_organ_tacs(sub,raw_root=RAW_ROOT,derivatives_root=DERIVATIVES_ROOT,rec=rec)
+            main(sub,raw_root=RAW_ROOT,derivatives_root=DERIVATIVES_ROOT,rec=rec)
         

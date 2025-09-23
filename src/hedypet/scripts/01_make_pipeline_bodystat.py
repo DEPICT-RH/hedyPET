@@ -1,8 +1,9 @@
 #%%
 from hedypet.preprocessing.registration import register_rigid_ants
-from hedypet.utils import load_splits, save_numpy_array
+from hedypet.utils import load_splits
+from hedypet.preprocessing.utils import save_numpy_array
 from tqdm import tqdm
-from bids import resample_and_save_bids
+from hedypet.preprocessing.resampling import resample_and_save_bids
 
 def main(sub,raw_root,derivatives_root,pipeline_name,derivatives_entities):
 

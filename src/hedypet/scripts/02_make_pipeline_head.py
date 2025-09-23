@@ -1,9 +1,9 @@
 #%%
 from hedypet.preprocessing.registration import register_rigid_ants
-from hedypet.utils import load_splits, save_numpy_array
-from hedypet.utils import get_head_center, get_voxmap_around_centerpoint
+from hedypet.utils import load_splits
+from hedypet.preprocessing.utils import get_head_center, get_voxmap_around_centerpoint, save_numpy_array
 from tqdm import tqdm
-from bids import resample_and_save_bids
+from hedypet.preprocessing.bids import resample_and_save_bids
 import numpy as np
 
 def main(sub,
