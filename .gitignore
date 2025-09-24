@@ -1,6 +1,6 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
-
+manuscript/
 analysis_old/
 old/
 .vscode/
@@ -15,7 +15,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+*.pkl
 # Distribution / packaging
 .Python
 build/

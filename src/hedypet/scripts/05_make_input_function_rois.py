@@ -25,7 +25,7 @@ def main(sub, ml,px,derivative_root,raw_root):
     aorta_segments_path = seg_derivatives / f"{sub}_seg-aortasegments_dseg.nii.gz"
     aorta_vois_path = seg_derivatives / f"{sub}_seg-aortavois_ml-{ml}_width-{px}_dseg.nii.gz"
     output_visualization_path =  Path(str(aorta_vois_path).replace(".nii.gz",".jpg"))
-
+    
     sidecar = load_sidecar(dpet_path)
     frame_time_start = np.array(sidecar['FrameTimesStart'])
 

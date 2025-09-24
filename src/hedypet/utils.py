@@ -39,4 +39,4 @@ def get_norm_consts(sub):
     for p in (DERIVATIVES_ROOT / "pet_norm_consts").glob(f"{sub}/*.txt"):
         with open(p,"r") as handle:
             norm_consts[p.stem] = float(handle.read())
-
+    return norm_consts
