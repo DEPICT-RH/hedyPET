@@ -1,13 +1,13 @@
 ## VIGTIGT: installer pip install indexed_gzip = langt hurtigere! 
+import os 
 from nifti_dynamic.aorta_rois import extract_aorta_vois, extract_aorta_segments, average_early_pet_frames
 import nibabel as nib
 import numpy as np
 from hedypet.utils import load_splits, load_sidecar, RAW_ROOT, DERIVATIVES_ROOT
 from pathlib import Path
-import os 
-from nifti_dynamic.visualizations import plot_aorta_visualizations
-from hedypet.utils import draw_cylinder
 from tqdm import tqdm 
+from nifti_dynamic.visualizations import plot_aorta_visualizations
+from hedypet.preprocessing.utils import draw_cylinder
 from hedypet.preprocessing.bids import create_derivatives_sidecar
 
 def fix_aorta_sub_77(aorta):
@@ -29,7 +29,7 @@ def main(sub, ml,px,derivative_root,raw_root):
     sidecar = load_sidecar(dpet_path)
     frame_time_start = np.array(sidecar['FrameTimesStart'])
 
-    if aorta_segments_path.exists() and aorta_vois_path.exists():
+    if output_visualization_path.exists():
         return
 
     os.makedirs(aorta_segments_path.parent,exist_ok=True)
@@ -54,7 +54,7 @@ def main(sub, ml,px,derivative_root,raw_root):
         )
 
 
-    if not aorta_vois_path.exists():
+    if not output_visualization_path.exists():
         aorta_segments = nib.load(aorta_segments_path)
         aorta_vois = extract_aorta_vois(aorta_segments, pet, volume_ml=ml,cylinder_width=px)
         nib.save(aorta_vois,aorta_vois_path)
@@ -73,7 +73,7 @@ def main(sub, ml,px,derivative_root,raw_root):
 
 if __name__ == "__main__":
     subs = load_splits()["all"]
-    subs.remove("sub-017")
+    subs = ["sub-017"]
     param_sets = [
         {
             "ml":1,

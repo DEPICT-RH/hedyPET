@@ -16,11 +16,7 @@ def main(sub,raw_root,derivatives_root):
     # run make_pipeline_head to create registration_matrices
     assert registration_matrix_head.exists()
 
-    try:
-        target = next(sub_root.glob("pet/*acdyn*_pet.nii.gz"))
-    except:
-        print("No dynamic PET found for", sub)
-        return
+    target = next(sub_root.glob("pet/*acdyn*_pet.nii.gz"))
     
     #Resample CT
     ct = next(sub_root.glob("anat/*_ct.nii.gz"))

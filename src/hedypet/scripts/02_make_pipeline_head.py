@@ -1,9 +1,9 @@
 #%%
 from hedypet.preprocessing.registration import register_rigid_ants
-from hedypet.utils import load_splits
-from hedypet.preprocessing.utils import get_head_center, get_voxmap_around_centerpoint, save_numpy_array
-from tqdm import tqdm
 from hedypet.preprocessing.resampling import resample_and_save_bids
+from hedypet.preprocessing.utils import get_head_center, get_voxmap_around_centerpoint, save_numpy_array
+from hedypet.utils import load_splits
+from tqdm import tqdm
 import numpy as np
 
 def main(sub,
@@ -80,5 +80,5 @@ if __name__ == "__main__":
     from hedypet.utils import RAW_ROOT, DERIVATIVES_ROOT
 
     subs = load_splits()["all"]
-    for sub in tqdm(["sub-000"]):
+    for sub in tqdm(subs):
         main(sub,RAW_ROOT,DERIVATIVES_ROOT)

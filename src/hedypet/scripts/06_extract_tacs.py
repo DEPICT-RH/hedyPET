@@ -14,7 +14,7 @@ def main(sub, raw_root, derivatives_root, rec="acstatPSF", erosions=[0,1]):
     elif rec =="acdynPSF":
         derivatives = derivatives_root / f"pipeline-bodydyn/{sub}"
         pet_path = next((raw_root / sub).glob("pet/*acdyn*_pet.nii.gz"))
-    elif rec == "acstatPSFhead":
+    elif rec == "acstatOSEMhead":
         derivatives = derivatives_root / f"pipeline-head08mm/{sub}"
         pet_path = next((raw_root / sub).glob(f"pet/*rec-{rec}_pet.nii.gz"))
     else:
@@ -82,8 +82,7 @@ def main(sub, raw_root, derivatives_root, rec="acstatPSF", erosions=[0,1]):
 if __name__ == "__main__":
     from tqdm import tqdm
     subs = load_splits()["all"]
-    subs.remove("sub-017")
-    for rec in ["acdynPSF","acstatPSF","acstatPSFhead"]:
+    subs = ["sub-017"]
+    for rec in ["acdynPSF","acstatPSF"]:
         for sub in tqdm(subs):
-
             main(sub,raw_root=RAW_ROOT,derivatives_root=DERIVATIVES_ROOT,rec=rec)

@@ -1,5 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
+src/hedypet/analysis/*.csv
+src/hedypet/analysis/*.tex
 manuscript/
 analysis_old/
 old/
