@@ -1,1 +1,1 @@
-![hedyPET banner](imgs/banner.jpg)
+![hedyPET banner](banner.jpg)
