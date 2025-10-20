@@ -2,11 +2,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os 
 import json
-import re 
-import nibabel as nib
 import numpy as np
 import pandas as pd
-from scipy.ndimage import binary_erosion
 
 load_dotenv()
 
@@ -28,7 +25,7 @@ def get_time_frames_midpoint(sub):
     frame_time_duration = np.array(sidecar["FrameDuration"])
     return frame_time_start + frame_time_duration/2
 
-def get_patient_metadata(sub):
+def get_participant_metadata(sub):
     df = pd.read_csv(RAW_ROOT / "participants.tsv",sep="\t")
     row = df[df.participant_id == sub].iloc[0].to_dict()
     row["InjectedRadioactivity"] = load_sidecar(next((RAW_ROOT / sub).glob("pet/*acstat*_pet.nii.gz")))["InjectedRadioactivity"]

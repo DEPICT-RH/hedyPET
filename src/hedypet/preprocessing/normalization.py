@@ -1,6 +1,4 @@
 import numpy as np
-import nibabel as nib
-from auto_sul import SUL_auto, dose_auto, LUV
 
 def lbm_james(patient_weight, patient_height, patient_sex):
     if patient_sex == "F":
@@ -44,24 +42,19 @@ def lbm_ct_decazes(patient_weight, ts_total_nii, ts_tissue_nii):
     lbm_VI = patient_weight - (fbm_VI_inside / 0.716) 
     return lbm_VI
 
-
 def SUV(injected_dose, patient_weight):
-    suv = (injected_dose / patient_weight)
+    suv = (injected_dose / (patient_weight*1000))
     return  suv
 
 def SUL_james(injected_dose, patient_weight, patient_height, patient_sex):
     lbm = lbm_james(patient_weight, patient_height, patient_sex)
-    return injected_dose / lbm
+    return injected_dose / (lbm*1000)
 
 def SUL_janma(injected_dose, patient_weight, patient_height, patient_sex):
     lbm = lbm_janma(patient_weight, patient_height, patient_sex)
-    return injected_dose / lbm
+    return injected_dose / (lbm*1000)
 
 def SUL_decazes(injected_dose, patient_weight, ts_total_nii,ts_tissue_nii):
     lbm = lbm_ct_decazes(patient_weight, ts_total_nii,ts_tissue_nii)
-    return injected_dose / lbm
+    return injected_dose / (lbm*1000)
 
-def SUL_auto_decazes(patient_weight,pet_nii,ts_total_nii,ts_tissue_nii,ts_body_nii):
-    lbm = lbm_ct_decazes(patient_weight,ts_total_nii,ts_tissue_nii)
-    dose = dose_auto(pet_nii,ts_total_nii,ts_tissue_nii,ts_body_nii)
-    return dose / lbm

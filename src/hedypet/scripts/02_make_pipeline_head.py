@@ -78,7 +78,7 @@ def main(sub,
 
 if __name__ == "__main__":
     from hedypet.utils import RAW_ROOT, DERIVATIVES_ROOT
-
+    
     subs = load_splits()["all"]
     for sub in tqdm(subs):
         main(sub,RAW_ROOT,DERIVATIVES_ROOT)
