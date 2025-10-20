@@ -1,0 +1,42 @@
+#------------------------------------------------------#
+#          JSRecon12 parameters modify                 #
+#                  03-Feb-2022                         #
+#------------------------------------------------------#
+
+# Postfiltering (all recon methods)
+#
+# To select "no filtering" set postfilterxy AND postfilterz to 0
+
+postfiltertype  :=   GAUSS
+postfilterxy    :=     0.0
+postfilterz     :=     0.0
+
+#------------------------------------------------------
+# Default iterations & subsets for TOF recons
+# NOTE: These are not in any sense "recommended".
+#       I picked these numbers rather arbitrarily.
+
+TOFawiter       :=       4
+TOFawsubsets    :=       5
+TOFopiter       :=       4
+TOFopsubsets    :=       5
+TOFpsfiter      :=       4
+TOFpsfsubsets   :=       5
+
+#------------------------------------------------------
+# Dynamic Framing
+#
+# Default framing parameters for listmode files.
+# Syntax is S:L,L,L,L,L, ... where S=StartTime
+# and L=FrameLength. Times in seconds. If you
+# say "all", the whole LM file will be used.
+#
+LMFrames        := 0:2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,5,5,5,5,5,5,5,5,5,5,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,60,60,60,60,60,60,120,120,120,120,120,120,120,120,120,120,300,300,300,300,300,300
+
+
+#------------------------------------------------------
+UseVersion := VR20
+
+#------------------------------------------------------
+outimagesize  :=     440
+

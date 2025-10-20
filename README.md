@@ -4,7 +4,7 @@
 
 A multimodal total-body dynamic 18F-FDG PET/CT/MRI dataset of 100 healthy humans for quantitative imaging research.
 
-📊 **[Data Explorer](https://hedypet.streamlit.app)** | 📥 **[Get Data](https://datacatalog.publicneuro.eu/dataset/super/V2)** | 📄 **[Read Publication](manuscript/main.tex)**
+📊 **[Data Explorer](https://hedypet.streamlit.app)** | 📥 **[Get Data](https://datacatalog.publicneuro.eu/dataset/super/V2)** | 📄 **[Read Publication](https://doi.org/10.xxxx/xxxxxxx)**
 
 ## Overview
 
@@ -15,7 +15,7 @@ The hedyPET dataset provides comprehensive multimodal imaging data from 100 heal
 **Raw Imaging Data**
 - **100 healthy participants** (18-100 years, stratified by age and sex) 👥
 - **Multiple PET reconstructions** (static and dynamic, with/without attenuation correction) 🔄
-- **Listmode PET data** (.ptd format) for flexible retrospective reconstruction 📊
+- **Listmode PET data** (.ptd format) for retrospective reconstruction harmonization 📊
 - **Topogram and Low-dose CT** for anatomical reference and attenuation correction 🩻
 - **Whole-body DIXON MRI and T1 MPRAGE** for soft tissue characterization 🧲
 
@@ -27,19 +27,19 @@ The hedyPET dataset provides comprehensive multimodal imaging data from 100 heal
 
 ## How to Acquire Data 📥
 
+> **Note**: Only 80 train/validation subjects are currently available. The remaining 20 test subjects are reserved for upcoming competitions.
+
 ### Pre-computed readouts 
-The repository includes pre-computed quantitative measures for the **80 train/validation subjects** in the `readouts/` folder:
-- Time-activity curves (TACs) for all organs and tissues
-- Static SUV/SUL measurements with/without mask erosion
-- Patlak Ki values
+The repository includes pre-computed quantitative measures in the `readouts/` folder. For all segmented regions we have extracted:
+- Time-activity curves (TACs)
+- Static SUV/SUL measurements
+- Patlak Ki values for different input functions and number of frames
 - Participant metadata and demographics
 
 🌐 **Explore the data interactively**: [hedypet.streamlit.app](https://hedypet.streamlit.app)
 
 ### Full Image Data (Application Required)
 Apply for complete imaging data (PET/CT/MRI) by signing up at [datacatalog.publicneuro.eu](https://datacatalog.publicneuro.eu/dataset/super/V2) and completing the Data User Agreement.
-
-> **Note**: Only 80 train/validation subjects are available. The remaining 20 test subjects are reserved for upcoming competitions.
 
 ## Installation & Setup ⚙️
 
@@ -54,47 +54,81 @@ cd hedypet
 pip install -e .
 ```
 
+
 3. **Set up environment variables:**
-Set the required environment variables:
+Set the required environment variables in a `.env` file or in the terminal:
 ```bash
-export RAW_ROOT=/path/to/hedypet/raw
-export DERIVATIVES_ROOT=/path/to/hedypet/derivatives
+RAW_ROOT=/path/to/hedypet/raw
+DERIVATIVES_ROOT=/path/to/hedypet/derivatives
 ```
 
 ## Usage Examples
 
-### Load participant data and splits
+### Load NIfTI images from raw and pipeline spaces
 ```python
-from hedypet.utils import load_splits, get_participant_metadata
+import nibabel as nib
+from hedypet.utils import RAW_ROOT, DERIVATIVES_ROOT
 
-# Load predefined train/test splits
-splits = load_splits()
-train_subjects = splits['train']  # 80 subjects
-test_subjects = splits['test']    # 20 subjects
+sub = "sub-001"
+raw_root = RAW_ROOT / sub
+totalsegmentator_root = DERIVATIVES_ROOT / "totalsegmentator" / sub
+pipeline_root = DERIVATIVES_ROOT / "pipeline-bodystat" / sub
 
-# Get participant demographics
-metadata = get_participant_metadata('sub-001')
-print(f"Age: {metadata['age']}, Sex: {metadata['sex']}")
+# Load images in their original spaces
+pet_raw = nib.load(next(raw_root.glob("**/*acstatPSF*.nii.gz")))
+ct_raw = nib.load(next(raw_root.glob("**/*_ct.nii.gz")))
+seg_total = nib.load(next(totalsegmentator_root.glob("**/*seg-total*.nii.gz")))
+
+print(f"PET shape: {pet_raw.shape}, CT shape: {ct_raw.shape}, Seg shape: {seg_total.shape}")
+
+# Load the same images resampled to acstatPSF space (pipeline-bodystat)  
+ct_pipeline = nib.load(next(pipeline_root.glob("**/*_ct*.nii.gz")))
+seg_pipeline = nib.load(next(pipeline_root.glob("**/*seg-total*.nii.gz")))
+
+print(f"PET shape: {pet_raw.shape}, CT shape: {ct_pipeline.shape}, Seg shape: {seg_pipeline.shape}")
 ```
 
-### Extract time-activity curves
+**Output:**
+```
+PET shape: (440, 440, 531), CT shape: (512, 512, 531), Seg shape: (512, 512, 531)
+PET shape: (440, 440, 531), CT shape: (440, 440, 531), Seg shape: (440, 440, 531)
+```
+
+### Analyze pre-computed readouts
 ```python
-from hedypet.preprocessing.tacs import extract_tacs
 import pandas as pd
 
-# Load pre-extracted TACs for liver analysis
-tacs_file = "derivatives/tacs/sub-001/acdynPSF/ts_total/erosion-0/liver.csv"
-tac_data = pd.read_csv(tacs_file)
-print(tac_data.head())
+# Load static measurements (install indexed_gzip for faster loading)
+df = pd.read_pickle('readouts/acstatPSF_means_80.pkl.gz')
+metadata = pd.read_csv('readouts/metadata.csv')
+
+# Merge with metadata and calculate SUV
+df = df.merge(metadata[['participant', 'suv_denominator']], on='participant')
+df['suv'] = df['pet_mu'] / df['suv_denominator']
+
+# Filter for non-eroded data and calculate mean SUV by organ
+organ_means = df[df.erosion_iterations == 0].groupby('seg_region_name')['suv'].mean()
+print(f"Top 5 organs by SUV:\n{organ_means.sort_values(ascending=False).head()}")
+```
+
+**Output:**
+```
+Top 5 organs by SUV:
+seg_region_name
+urinary_bladder              27.772495
+ctx-lh-transversetemporal    10.941400
+ctx-rh-transversetemporal    10.897202
+ctx-lh-precuneus              9.888452
+Right-Putamen                 9.848088
 ```
 
 ## Data Processing Pipeline 🔧
 
-The derivatives, standardized coordinate spaces, and readouts were created using a series of preprocessing scripts. Here's the complete workflow:
+The derivatives, standardized coordinate spaces, and readouts were created using a series of preprocessing scripts. Large dynamic NIfTI files are processed efficiently using the `nifti_dynamic` library for chunked analysis. Here's the complete workflow:
 
 ### Core Processing Scripts
 ```bash
-# 1. Create body-static coordinate space (co-register all modalities)
+# 1. Create body-static coordinate space (all images resampled to acstatPSF/OSEM)
 python src/hedypet/scripts/01_make_pipeline_bodystat.py
 
 # 2. Create head coordinate space (high-resolution brain analysis)  
@@ -111,11 +145,17 @@ python src/hedypet/scripts/05_make_input_function_rois.py
 
 # 6. Extract time-activity curves and static measurements
 python src/hedypet/scripts/06_extract_tacs_and_means.py
-python src/hedypet/scripts/06_extract_tacs_ct.py
+
+# 7. Combine readouts to dataframes and save to readouts folder
+python src/hedypet/scripts/07_combine_dataframes.py
 ```
 
 
-For detailed methodology, technical specifications, and validation results, see the accompanying manuscript in the `manuscript/` directory.
+For detailed methodology, technical specifications, and validation results, see the accompanying publication.
+
+## Reconstruction Reproducibility 🔧
+
+E7 reconstruction parameter files are provided in the `reconstructions/` folder to enable reproduction of the clinical reconstructions from listmode data.
 
 ## Citation 📝
 
@@ -132,15 +172,10 @@ If you use this dataset, please cite:
 }
 ```
 
-## Repository Structure
-
-- **`src/hedypet/`**: Core Python package
-  - **`preprocessing/`**: Image processing and registration utilities
-  - **`analysis/`**: Analysis tools and notebooks
-  - **`scripts/`**: Processing pipeline scripts
-- **`readouts/`**: Pre-computed quantitative measures
-- **`manuscript/`**: LaTeX manuscript source
-
+## Data Notes
+- The dynamic acquisition of sub-017 was reconstructed using E7 instead of scanner software (see `reconstructions/` folder for E7 parameters)
+- Raw data and head reconstructions for subject sub-098 were unfortunately lost
+- TOPOGRAM for subject sub-084 was lost
 
 ## Acknowledgments
 

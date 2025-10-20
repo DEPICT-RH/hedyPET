@@ -1,4 +1,4 @@
-participant_id,weight,demographic-group,injected_readioactivity,suv_denominator
+participant,weight,demographic-group,injected_readioactivity,suv_denominator
 sub-072,70,F18-34,27.895853241040463,398.5121891577209
 sub-063,58,F18-34,24.62279308017752,424.5309151754745
 sub-025,102,F18-34,43.93098807971909,430.6959615658735
