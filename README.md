@@ -1,5 +1,3 @@
-# hedyPET Dataset 🧠
-
 ![hedyPET banner](banner.jpg)
 
 A multimodal total-body dynamic 18F-FDG PET/CT/MRI dataset of 100 healthy humans for quantitative imaging research.
