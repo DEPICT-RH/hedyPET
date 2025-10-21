@@ -14,4 +14,4 @@ This folder contains E7 reconstruction parameter files to reproduce the clinical
 
 These parameter files can be used with Siemens E7 reconstruction software to process listmode data (.ptd files) with identical settings to the original dataset reconstructions.
 
-> **Note**: Subject sub-017's dynamic data was reconstructed using these E7 parameters instead of the scanner's clinical software. 
+> **Note**: Subject sub-017's acdynPSF image was reconstructed using E7 instead of the scanner's clinical software. 

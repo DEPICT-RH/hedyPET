@@ -1,5 +1,3 @@
-# hedyPET Dataset 🧠
-
 ![hedyPET banner](banner.jpg)
 
 A multimodal total-body dynamic 18F-FDG PET/CT/MRI dataset of 100 healthy humans for quantitative imaging research.
@@ -99,15 +97,15 @@ PET shape: (440, 440, 531), CT shape: (440, 440, 531), Seg shape: (440, 440, 531
 import pandas as pd
 
 # Load static measurements (install indexed_gzip for faster loading)
-df = pd.read_pickle('readouts/acstatPSF_means_80.pkl.gz')
+df = pd.read_pickle('readouts/means_80.pkl.gz')
 metadata = pd.read_csv('readouts/metadata.csv')
 
 # Merge with metadata and calculate SUV
-df = df.merge(metadata[['participant', 'suv_denominator']], on='participant')
-df['suv'] = df['pet_mu'] / df['suv_denominator']
+df = df.merge(metadata[['Subject', 'SUV Denominator [Bq/mL]']], on='Subject')
+df['SUV Mean'] = df['PET Mean [Bq/mL]'] / df['SUV Denominator [Bq/mL]']
 
 # Filter for non-eroded data and calculate mean SUV by organ
-organ_means = df[df.erosion_iterations == 0].groupby('seg_region_name')['suv'].mean()
+organ_means = df[df["Erosion Iterations"] == 0].groupby('Label Name')['SUV Mean'].mean()
 print(f"Top 5 organs by SUV:\n{organ_means.sort_values(ascending=False).head()}")
 ```
 
@@ -147,7 +145,7 @@ python src/hedypet/scripts/05_make_input_function_rois.py
 python src/hedypet/scripts/06_extract_tacs_and_means.py
 
 # 7. Combine readouts to dataframes and save to readouts folder
-python src/hedypet/scripts/07_combine_dataframes.py
+07_combine_to_dataframes.ipynb
 ```
 
 
