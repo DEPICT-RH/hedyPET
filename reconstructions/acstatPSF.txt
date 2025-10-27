@@ -1,0 +1,51 @@
+## How to reconstruct acstatPSF using JSRecon12 (e7 tools) on Windows:
+# cscript \path\to\JSRecon12\JSRecon12.js source\sub-000\ acstatPSF.txt
+# cd source\sub-000-Converted\sub-000-LM-00 
+# Run-00-sub-000-LM-00-Histogramming
+# Run-01-sub-000-LM-00-Makeumap.bat
+# Run-01-sub-000-LM-00-Makeumap.bat
+# Run-04-sub-000-LM-00-PSFTOF.bat
+# Run-05-sub-000-LM-00-IF2Dicom.bat 
+
+#------------------------------------------------------#
+#          JSRecon12 parameters modify                 #
+#                  03-Feb-2022                         #
+#------------------------------------------------------#
+
+# Postfiltering (all recon methods)
+#
+# To select "no filtering" set postfilterxy AND postfilterz to 0
+
+postfiltertype  :=   GAUSS
+postfilterxy    :=     2.0
+postfilterz     :=     2.0
+
+#------------------------------------------------------
+# Default iterations & subsets for TOF recons
+# NOTE: These are not in any sense "recommended".
+#       I picked these numbers rather arbitrarily.
+
+TOFawiter       :=       4
+TOFawsubsets    :=       5
+TOFopiter       :=       4
+TOFopsubsets    :=       5
+TOFpsfiter      :=       4
+TOFpsfsubsets   :=       5
+
+#------------------------------------------------------
+# Dynamic Framing
+#
+# Default framing parameters for listmode files.
+# Syntax is S:L,L,L,L,L, ... where S=StartTime
+# and L=FrameLength. Times in seconds. If you
+# say "all", the whole LM file will be used.
+#
+LMFrames        := 3000:1200
+
+
+#------------------------------------------------------
+UseVersion := VR20
+
+#------------------------------------------------------
+outimagesize  :=     440
+
