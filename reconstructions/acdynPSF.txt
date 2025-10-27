@@ -1,3 +1,12 @@
+## How to reconstruct acdynPSF using JSRecon12 (e7 tools) on Windows:
+# cscript \path\to\JSRecon12\JSRecon12.js source\sub-000\ acdynPSF.txt
+# cd source\sub-000-Converted\sub-000-LM-00 
+# Run-00-sub-000-LM-00-Histogramming
+# Run-01-sub-000-LM-00-Makeumap.bat
+# Run-01-sub-000-LM-00-Makeumap.bat
+# Run-04-sub-000-LM-00-PSFTOF.bat
+# Run-05-sub-000-LM-00-IF2Dicom.bat 
+
 #------------------------------------------------------#
 #          JSRecon12 parameters modify                 #
 #                  03-Feb-2022                         #
