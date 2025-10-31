@@ -3,25 +3,25 @@ import os
 from nifti_dynamic.aorta_rois import extract_aorta_vois, extract_aorta_segments, average_early_pet_frames
 import nibabel as nib
 import numpy as np
-from hedypet.utils import load_splits, load_sidecar, RAW_ROOT, DERIVATIVES_ROOT
+from hedypet.utils import load_splits, load_sidecar,  DYNAMIC_ROOT
 from pathlib import Path
 from tqdm import tqdm 
 from nifti_dynamic.visualizations import plot_aorta_visualizations
 from hedypet.preprocessing.utils import draw_cylinder
 from hedypet.preprocessing.bids import create_derivatives_sidecar
+from nibabel.processing import resample_from_to
 
-def fix_aorta_sub_77(aorta):
-    p1 = (440-223,199,345)
-    p2 = (440-226,201,372)
-    cyl = draw_cylinder(p1,p2,5, aorta.shape)
-    return aorta | cyl
+def fix_aorta_sub_77(totalseg):
+    fixed_aorta = nib.load(Path(__file__).parents[3]/"_aorta_fix/sub-077-aorta.nii.gz")
+    fixed_aorta = resample_from_to(fixed_aorta,totalseg,order=0)
+    return fixed_aorta.get_fdata()==1   
 
-
-def main(sub, ml,px,derivative_root,raw_root):
-    dyn_derivatives = derivative_root / f"pipeline-bodydyn/{sub}"
-    seg_derivatives = derivative_root / f"aorta/{sub}"
-    dpet_path = next((raw_root / sub).glob("pet/*acdyn*_pet.nii.gz"))
-    totalseg_path = next(dyn_derivatives.glob("anat/*total*_dseg.nii.gz"))
+def main(sub, ml,px,dynamic_root):
+    derivatives_root = dynamic_root / "derivatives"
+    dyn_derivatives = derivatives_root / f"pipeline-bodydyn/{sub}"
+    seg_derivatives = derivatives_root / f"aorta/{sub}"
+    dpet_path = next((dynamic_root / sub).glob("ses-quadra/pet/*acdyn*_pet.nii.gz"))
+    totalseg_path = next(dyn_derivatives.glob("ses-quadra/ct/*br38f*total*_dseg.nii.gz"))
     aorta_segments_path = seg_derivatives / f"{sub}_seg-aortasegments_dseg.nii.gz"
     aorta_vois_path = seg_derivatives / f"{sub}_seg-aortavois_ml-{ml}_width-{px}_dseg.nii.gz"
     output_visualization_path =  Path(str(aorta_vois_path).replace(".nii.gz",".jpg"))
@@ -40,7 +40,7 @@ def main(sub, ml,px,derivative_root,raw_root):
         totalseg = nib.load(totalseg_path)
         aorta_mask = totalseg.get_fdata()==52
         if sub == "sub-077":
-            aorta_mask = fix_aorta_sub_77(aorta_mask)
+            aorta_mask = fix_aorta_sub_77(totalseg)
         aorta_mask = nib.Nifti1Image(aorta_mask.astype(np.int16),affine=totalseg.affine)
 
         #Extract mask
@@ -50,19 +50,22 @@ def main(sub, ml,px,derivative_root,raw_root):
             aorta_segments_path, 
             reference=dpet_path,
             sources=[dpet_path,totalseg_path],
-            Description="Aorta segments version 1.0"
+            Description="Aorta segments nifty_dynamic v0.3.1"
         )
 
-
     if not output_visualization_path.exists():
+        print(sub)
         aorta_segments = nib.load(aorta_segments_path)
-        aorta_vois = extract_aorta_vois(aorta_segments, pet, volume_ml=ml,cylinder_width=px)
+        if str(ml) == "full":
+            aorta_vois = extract_aorta_vois(aorta_segments, pet, cylinder_width=px,use_full_length=True)
+        else:
+            aorta_vois = extract_aorta_vois(aorta_segments, pet, volume_ml=ml,cylinder_width=px)
         nib.save(aorta_vois,aorta_vois_path)
         create_derivatives_sidecar(
             aorta_vois_path, 
             reference=dpet_path,
             sources=[dpet_path,totalseg_path],
-            Description=f"Aorta vois version 1.0, volume: {ml}ml, cylinder width: {px}pixels."
+            Description=f"Aorta vois nifty_dynamic v0.3.1, volume: {ml}ml, cylinder width: {px}pixels."
         )
         plot_aorta_visualizations(
             pet,
@@ -73,24 +76,30 @@ def main(sub, ml,px,derivative_root,raw_root):
 
 if __name__ == "__main__":
     subs = load_splits()["all"]
-    subs = ["sub-017"]
+
+if __name__ == "__main__":
+    from hedypet.utils import  DYNAMIC_ROOT
+    from multiprocessing import Pool
+    
+    subs = load_splits()["all"]
     param_sets = [
+        {
+            "ml":"full",
+            "px":3,
+        },
         {
             "ml":1,
             "px":3,
         },
         {
-            "ml":1.5,
-            "px":5,
-        },
-        {
             "ml":2,
             "px":5,
-        }
+        },
     ]
-    for param in param_sets:
-        for sub in tqdm(subs):
-            print(DERIVATIVES_ROOT,RAW_ROOT)
-            main(sub,**param,derivative_root=DERIVATIVES_ROOT, raw_root=RAW_ROOT)
 
-# %%
+    def worker(sub):
+        for param in param_sets:
+            main(sub,param["ml"],param["px"], DYNAMIC_ROOT)
+
+    with Pool(12) as pool:
+        list(tqdm(pool.imap(worker, subs), total=len(subs)))

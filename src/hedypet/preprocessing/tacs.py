@@ -1,10 +1,10 @@
 
-from nifti_dynamic.utils import extract_multiple_tacs, save_tac
+from nifti_dynamic.tacs import extract_multiple_tacs, save_tac
 import nibabel as nib
 import numpy as np
 from hedypet.preprocessing.bids import create_derivatives_sidecar
 from hedypet.preprocessing.utils import binary_erode
-
+from hedypet.utils import load_sidecar
 
 def extract_and_save_tac(dpet_path,seg_path,tac_save_folder,erosion):
     if isinstance(seg_path, np.ndarray):
@@ -14,13 +14,16 @@ def extract_and_save_tac(dpet_path,seg_path,tac_save_folder,erosion):
         seg = nib.load(seg_path).get_fdata()
         seg = binary_erode(seg,erosion)
         sources = [dpet_path,seg_path]
-
+    
+    dpet_json = load_sidecar(dpet_path)
     create_derivatives_sidecar(tac_save_folder.parent,reference=None,sources=sources)
-    tacs_mean, tacs_std, tacs_n = extract_multiple_tacs(dpet_path, seg,return_std_n=True)
+    tacs_mean, tacs_std, tacs_n = extract_multiple_tacs(dpet_path, seg)
     for k in tacs_mean:
         save_tac(
-            tac_save_folder/f"tac_{k}",
+            tac_save_folder/f"tac_{k}.csv",
                 tacs_mean[k],
                 tacs_std[k],
                 tacs_n[k],
+                dpet_json["FrameTimesStart"],
+                dpet_json["FrameDuration"]
             )

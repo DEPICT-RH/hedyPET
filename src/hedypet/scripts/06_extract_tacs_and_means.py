@@ -1,75 +1,76 @@
 
 import nibabel as nib
 import numpy as np
-from hedypet.utils import load_splits, RAW_ROOT, DERIVATIVES_ROOT
+from hedypet.utils import load_splits, STATIC_ROOT, DYNAMIC_ROOT
 from hedypet.preprocessing.tacs import extract_and_save_tac
 from parse import parse
 
-def main(sub, raw_root, derivatives_root, rec="acstatPSF", erosions=[0,1]):
+def main(sub, static_root, dynamic_root, rec="acstatPSF", erosions=[0,1]):
     """Organ mean extraction for PET reconstrunctions"""
 
     if rec == "acstatPSF":
-        derivatives = derivatives_root / f"pipeline-bodystat/{sub}"
-        pet_path = next((raw_root / sub).glob(f"pet/*rec-{rec}_pet.nii.gz"))
+        derivatives = static_root / f"derivatives/pipeline-bodystat/{sub}"
+        pet_path = next((static_root / sub).glob(f"ses-quadra/pet/*rec-{rec}_pet.nii.gz"))
+        pipeline_root = static_root / f"derivatives/tacs"
+
     elif rec =="acdynPSF":
-        derivatives = derivatives_root / f"pipeline-bodydyn/{sub}"
-        pet_path = next((raw_root / sub).glob("pet/*acdyn*_pet.nii.gz"))
+        derivatives = dynamic_root / f"derivatives/pipeline-bodydyn/{sub}"
+        pet_path = next((dynamic_root / sub).glob("ses-quadra/pet/*acdyn*_pet.nii.gz"))
+        pipeline_root = dynamic_root / f"derivatives/tacs"
+        
     elif rec == "acstatOSEMhead":
-        derivatives = derivatives_root / f"pipeline-head08mm/{sub}"
-        pet_path = next((raw_root / sub).glob(f"pet/*rec-{rec}_pet.nii.gz"))
+        derivatives = static_root / f"derivatives/pipeline-head1mm/{sub}"
+        pet_path = next((static_root / sub).glob(f"ses-quadra/pet/*rec-{rec}_pet.nii.gz"))
+        pipeline_root = static_root / f"derivatives/tacs"
     else:
         raise Exception("Unsupported reconstruction")
     
-    pipeline_root = derivatives_root / f"tacs"
-
     #Aorta derivatives are ignored for non-dynamic acquisitions
-    derivatives_root_aorta = derivatives_root / f"aorta/{sub}"
+    derivatives_aorta_sub = dynamic_root / f"derivatives/aorta/{sub}"
 
     for erosion in erosions:
         
         # Totalseg total
-        totalseg_path = next(derivatives.glob("anat/*rec-br38f_seg-total*_dseg.nii.gz"))
         totalseg_organs_tacs_path = (pipeline_root / sub) / f"{rec}/ts_total/erosion-{erosion}"
         if not totalseg_organs_tacs_path.exists() and rec in ["acstatPSF","acdynPSF"]:
+            totalseg_path = next(derivatives.glob("ses-quadra/ct/*rec-br38f_seg-total*_dseg.nii.gz"))
             extract_and_save_tac(pet_path, totalseg_path,totalseg_organs_tacs_path,erosion)
 
         #Synthseg
-        synthseg_path = next(derivatives.glob("anat/*synthseg_*dseg.nii.gz"))
         synthseg_tacs_path = (pipeline_root / sub) / f"{rec}/synthseg/erosion-{erosion}"
         if not synthseg_tacs_path.exists():
-            print(synthseg_path)
+            synthseg_path = next(derivatives.glob("ses-vida/anat/*synthseg_*dseg.nii.gz"))
             extract_and_save_tac(pet_path, synthseg_path,synthseg_tacs_path,erosion)
 
         #Synthseg parc
-        synthsegparc_path = next(derivatives.glob("anat/*synthsegparc_*dseg.nii.gz"))
         synthsegparc_tacs_path = (pipeline_root / sub) / f"{rec}/synthsegparc/erosion-{erosion}"
         if not synthsegparc_tacs_path.exists():
+            synthsegparc_path = next(derivatives.glob("ses-vida/anat/*synthsegparc_*dseg.nii.gz"))
             extract_and_save_tac(pet_path, synthsegparc_path,synthsegparc_tacs_path,erosion)
 
         # Totalseg tissue
-        tissue_path = next(derivatives.glob("anat/*rec-br38f_seg-tissue*_dseg.nii.gz"))
         tissue_tacs_path = (pipeline_root / sub) / f"{rec}/ts_tissue/erosion-{erosion}"
         if not tissue_tacs_path.exists() and rec in ["acstatPSF","acdynPSF"]:
+            tissue_path = next(derivatives.glob("ses-quadra/ct/*rec-br38f_seg-tissue*_dseg.nii.gz"))
             extract_and_save_tac(pet_path,tissue_path,tissue_tacs_path,erosion)
-
+        
         # Totalseg body
-        body_path = next(derivatives.glob("anat/*rec-br38f_seg-body*_dseg.nii.gz"))
         body_tacs_path = (pipeline_root / sub) / f"{rec}/ts_body/erosion-{erosion}"
         if not body_tacs_path.exists():
+            body_path = next(derivatives.glob("ses-quadra/ct/*rec-br38f_seg-body*_dseg.nii.gz"))
             extract_and_save_tac(pet_path,body_path,body_tacs_path,erosion)
 
         # Aorta segments (only for dynamic acquisition)
-        aortasegments_path = next((derivatives_root_aorta).glob("*aortasegments*.nii.gz"))
         aortasegments_tacs_path = (pipeline_root / sub) / f"{rec}/aortasegments/erosion-{erosion}"
         if not aortasegments_tacs_path.exists() and rec == "acdynPSF":
+            aortasegments_path = next((derivatives_aorta_sub).glob("*aortasegments*.nii.gz"))
             extract_and_save_tac(pet_path,aortasegments_path,aortasegments_tacs_path,erosion)
 
     # Aorta VOIS (only for dynamic acquisition)
-    for aortvois_path in (derivatives_root_aorta).glob("*aortavois*.nii.gz"):
+    for aortvois_path in (derivatives_aorta_sub).glob("*aortavois*.nii.gz"):
         voi_name = parse("{}seg-{voi_name}_dseg.nii.gz", aortvois_path.name).named["voi_name"]
         aortavois_tacs_path = (pipeline_root / sub) / f"{rec}/{voi_name}/erosion-0"
         if not aortavois_tacs_path.exists() and rec == "acdynPSF":
-            print(aortavois_tacs_path)
             extract_and_save_tac(pet_path,aortvois_path,aortavois_tacs_path,erosion=0)
 
     # Whole body
@@ -81,8 +82,14 @@ def main(sub, raw_root, derivatives_root, rec="acstatPSF", erosions=[0,1]):
 
 if __name__ == "__main__":
     from tqdm import tqdm
+    from multiprocessing import Pool
+
     subs = load_splits()["all"]
-    subs = ["sub-017"]
-    for rec in ["acdynPSF","acstatPSF"]:
-        for sub in tqdm(subs):
-            main(sub,raw_root=RAW_ROOT,derivatives_root=DERIVATIVES_ROOT,rec=rec)
+
+    def worker(sub):
+        for rec in ["acstatPSF","acdynPSF"]:
+            main(sub,static_root=STATIC_ROOT,dynamic_root=DYNAMIC_ROOT,rec=rec)
+
+    with Pool(12) as pool:
+        list(tqdm(pool.imap(worker, subs), total=len(subs)))
+

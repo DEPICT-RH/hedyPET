@@ -5,6 +5,7 @@ src/hedypet/make_train_val_upload.py
 src/hedypet/analysis/*.csv
 src/hedypet/analysis/*.tex
 src/hedypet/analysis
+src/hedypet/public_neuro
 manuscript/
 analysis_old/
 old/
