@@ -2,7 +2,7 @@
 
 A multimodal total-body dynamic 18F-FDG PET/CT/MRI dataset of 100 healthy humans for quantitative imaging research.
 
-📊 **[Data Explorer](https://hedypet.depict.dk)** | 📥 **[Get Data]([https://hedypet.depict.dk](https://hedypet.depict.dk/#how-to-acquire-the-data))** | 📄 **[Read Publication](https://doi.org/10.xxxx/xxxxxxx)**
+📊 **[Data Explorer](https://hedypet.depict.dk)** | 📥 **[Get Data](https://hedypet.depict.dk](https://hedypet.depict.dk/#how-to-acquire-the-data)** | 📄 **[Read Publication](https://doi.org/10.xxxx/xxxxxxx)**
 
 ## Overview
 
