@@ -1,5 +1,5 @@
-## How to reconstruct acdynPSF using JSRecon12 (e7 tools) on Windows:
-# cscript \path\to\JSRecon12\JSRecon12.js source\sub-000\ acdynPSF.txt
+## How to reconstruct acstatPSF using JSRecon12 (e7 tools) on Windows:
+# cscript \path\to\JSRecon12\JSRecon12.js source\sub-000\ acstatPSF.txt
 # cd source\sub-000-Converted\sub-000-LM-00 
 # Run-00-sub-000-LM-00-Histogramming
 # Run-01-sub-000-LM-00-Makeumap.bat
@@ -17,8 +17,8 @@
 # To select "no filtering" set postfilterxy AND postfilterz to 0
 
 postfiltertype  :=   GAUSS
-postfilterxy    :=     0.0
-postfilterz     :=     0.0
+postfilterxy    :=     2.0
+postfilterz     :=     2.0
 
 #------------------------------------------------------
 # Default iterations & subsets for TOF recons
@@ -40,7 +40,7 @@ TOFpsfsubsets   :=       5
 # and L=FrameLength. Times in seconds. If you
 # say "all", the whole LM file will be used.
 #
-LMFrames        := 0:2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,5,5,5,5,5,5,5,5,5,5,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,60,60,60,60,60,60,120,120,120,120,120,120,120,120,120,120,300,300,300,300,300,300
+LMFrames        := 3000:1200
 
 
 #------------------------------------------------------
