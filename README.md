@@ -56,8 +56,8 @@ pip install -e .
 3. **Set up environment variables:**
 Set the required environment variables in a `.env` file or in the terminal:
 ```bash
-RAW_ROOT=/path/to/hedypet/raw
-DERIVATIVES_ROOT=/path/to/hedypet/derivatives
+hedypet_static_root=/path/to/hedypet/static
+hedypet_dynamic_root=/path/to/hedypet/dynamic
 ```
 
 ## Usage Examples
@@ -74,14 +74,14 @@ pipeline_root = DERIVATIVES_ROOT / "pipeline-bodystat" / sub
 
 # Load images in their original spaces
 pet_raw = nib.load(next(raw_root.glob("**/*acstatPSF*.nii.gz")))
-ct_raw = nib.load(next(raw_root.glob("**/*_ct.nii.gz")))
-seg_total = nib.load(next(totalsegmentator_root.glob("**/*seg-total*.nii.gz")))
+ct_raw = nib.load(next(raw_root.glob("**/*br38f_ct.nii.gz")))
+seg_total = nib.load(next(totalsegmentator_root.glob("**/*br38f*seg-total*.nii.gz")))
 
 print(f"PET shape: {pet_raw.shape}, CT shape: {ct_raw.shape}, Seg shape: {seg_total.shape}")
 
 # Load the same images resampled to acstatPSF space (pipeline-bodystat)  
-ct_pipeline = nib.load(next(pipeline_root.glob("**/*_ct*.nii.gz")))
-seg_pipeline = nib.load(next(pipeline_root.glob("**/*seg-total*.nii.gz")))
+ct_pipeline = nib.load(next(pipeline_root.glob("**/*br38f*_ct.nii.gz")))
+seg_pipeline = nib.load(next(pipeline_root.glob("**/*br38f*seg-total*.nii.gz")))
 
 print(f"PET shape: {pet_raw.shape}, CT shape: {ct_pipeline.shape}, Seg shape: {seg_pipeline.shape}")
 ```
@@ -161,10 +161,10 @@ If you use this dataset, please cite:
 
 ```bibtex
 @article{hinge2024hedypet,
-  title={A multimodal total-body dynamic 18F-FDG PET/CT/MRI dataset of 100 healthy humans},
-  author={Hinge, Christian and others},
+  title={....},
+  author={....},
   journal={Scientific Data},
-  year={2024},
+  year={2025},
   publisher={Nature},
   doi={10.xxxx/xxxxxxx}
 }
@@ -178,7 +178,3 @@ If you use this dataset, please cite:
 ## Acknowledgments
 
 We thank Siemens Healthineers for funding, the Danish Blood Donor Study for recruitment, and all participants who contributed to this research. Special thanks to the teams at Rigshospitalet for data acquisition and technical support.
-
----
-
-**Happy analyzing! 🚀**
