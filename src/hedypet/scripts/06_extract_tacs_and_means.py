@@ -90,6 +90,8 @@ if __name__ == "__main__":
         for rec in ["acstatPSF","acdynPSF"]:
             main(sub,static_root=STATIC_ROOT,dynamic_root=DYNAMIC_ROOT,rec=rec)
 
+    for sub in subs:
+        worker(sub)
     with Pool(12) as pool:
         list(tqdm(pool.imap(worker, subs), total=len(subs)))
 
